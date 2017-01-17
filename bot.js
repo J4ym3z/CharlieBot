@@ -46,7 +46,7 @@ client.on('message', message => {
       var msg = message.toString().slice(22).toLowerCase();
 
       if (msg === 'ping') {
-        message.channel.send('pong');
+        message.channel.send('pong!');
       }else if (msg === 'you died.') {
         message.channel.send('idk man');
       }else if (msg === 'owner') {
