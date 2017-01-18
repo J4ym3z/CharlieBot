@@ -44,29 +44,50 @@ client.on('message', message => {
     if (message.toString().slice(0,22).trim() == '<@270625647464939521>') { //This means the message may be a command
 
       var msg = message.toString().slice(22).toLowerCase();
+      var args = msg.split(' ');
 
-      if (msg === 'ping') {
-        message.channel.send('ping');
-      }else if (msg === 'you died.') {
-        message.channel.send('idk man');
-      }else if (msg === 'owner') {
-        message.channel.send('The owner of this server is \"' + message.channel.guild.owner.displayName + '\" the almighty');
-      }else if (msg === 'time') {
-        message.channel.send('It is currently ' + timeNow() + ' EST');
-      }else if (msg === 'avatar') {
-        var avatar = message.author.avatarURL;
-        if (avatar != null) {
-          message.channel.send(avatar);
+      var commandIssued = false;
+
+      if (args.length === 1) { //single word command
+        if (msg === 'ping') {
+          message.channel.send('pong!');
+          commandIssued = true;
+        }else if (msg === 'owner') {
+          message.channel.send('The owner of this server is \"' + message.channel.guild.owner.displayName + '\" the almighty');
+          commandIssued = true;
+        }else if (msg === 'time') {
+          message.channel.send('It is currently ' + timeNow() + ' EST');
+          commandIssued = true;
+        }else if (msg === 'avatar') {
+          var avatar = message.author.avatarURL;
+          if (avatar != null) {
+            message.channel.send(avatar);
+            commandIssued = true;
+          }
         }
-      }else {
+      }else if (args.length >= 2) {
+        args.forEach(function(arg, index){ //loop for commands with atleast one argument
+          if (commandIssued === false) {
+            if (arg === 'avatar') {
+              if (args[index + 1].slice(2, 20) === message.mentions.users.first().id) {
+                message.channel.send(message.mentions.users.first().avatarURL);
+                commandIssued = true;
+              }
+            }
+          }
+        });
+      }
+
+      if (commandIssued === false) {
         askCleverBot(message.toString().slice(22), message);
       }
+
     }
 
     var msg = message.content.toLowerCase();
 
     if (msg.includes('lie') || msg.includes('liar')){
-      message.reply('its true it\'s from jacksfilms');
+      //message.reply('its true it\'s from jacksfilms');
     }else if (msg.includes('shut up')) {
       message.reply('bad day?');
     }else if (msg.includes('lasaga')) {
