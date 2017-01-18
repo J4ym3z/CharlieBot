@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const cleverbot = require('cleverbot.io');
 
-const chatbot = new cleverbot("ATbnnWU2C4okaHVT", "GyGHH3l6gnL0jwlyiNf8rx1IncVMcdSO");
+const chatbot = new cleverbot('ATbnnWU2C4okaHVT', 'GyGHH3l6gnL0jwlyiNf8rx1IncVMcdSO');
 const client = new Discord.Client();
 
 client.login('MjcwNjI1NjQ3NDY0OTM5NTIx.C16tsQ.Bz9vx9AkpV4G6iYvLK6FQfdENdI');
