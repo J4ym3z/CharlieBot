@@ -15,6 +15,6 @@ All commands must begin with a mention of @Charlie
  
  If you start a message by mentioning Charlie but no command is recognized, Charlie will reply as Cleverbot would!
  
- # How to use
+# How to use
  Simply invite Charlie to any server you're an andministrator on by going to this URL:
  https://discordapp.com/oauth2/authorize?client_id=270625647464939521&scope=bot&permissions=8
