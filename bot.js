@@ -6,10 +6,8 @@ const client = new Discord.Client();
 
 client.login('MjcwNjI1NjQ3NDY0OTM5NTIx.C16tsQ.Bz9vx9AkpV4G6iYvLK6FQfdENdI');
 
-chatbot.setNick("discordCharlieBot")
-chatbot.create(function (err, session) {
-
-});
+chatbot.setNick('discordCharlieBot');
+chatbot.create(function (err, session) {});
 
 function askCleverBot(query, msg) {
   chatbot.ask(query, function (err, response) {
@@ -71,7 +69,7 @@ client.on('message', message => {
           message.channel.send('Invite me to your server! https://discordapp.com/oauth2/authorize?client_id=270625647464939521&scope=bot&permissions=8');
           commandIssued = true;
         }else if (msg === 'help') {
-          message.channel.send('__Charlie Help__ \n*All commands must begin with a mention of @Charlie* \n \n **help** - Full list of commands. \n **ping** - If Charlie is working, replies with \"pong!\" \n **marco** - polo! \n **time** - Shows your computer\'s time. \n **avatar** [arg] - Displays the mentioned user\'s avatar, or your own if no user is mentioned. \n **owner** - Relays the owner of the server. \n **invite** - Want to add Charlie to your own server? (the answer is no) \n \n *If you start a message by mentioning Charlie but no command is recognized, Charlie will reply as Cleverbot would!*');
+          message.channel.send('__Charlie Help__ \n*All commands must begin with a mention of @Charlie* \n \n **help** - Full list of commands. \n **ping** - If Charlie is working, replies with \"pong!\" \n **marco** - polo! \n **time** - Shows your computer\'s time. \n **avatar** [arg] - Displays the mentioned user\'s avatar, or your own if no user is mentioned. \n **owner** - Relays the owner of the server. \n **invite** - Want to add Charlie to your own server? \n \n *If you start a message by mentioning Charlie but no command is recognized, Charlie will reply as Cleverbot would!*');
           commandIssued = true;
         }
       }
