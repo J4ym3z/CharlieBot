@@ -14,9 +14,9 @@ All commands must begin with a mention of @Charlie
  ping|If Charlie is working, replies with "pong!" 
  marco|polo! 
  time|Shows your computer's time. 
- avatar [user]|Displays the mentioned user's avatar, or your own if no user is mentioned. 
  owner|Relays the owner of the server. 
  invite|Provides the invite link to add Charlie to another server.
+ avatar [user]|Displays the mentioned user's avatar, or your own if no user is mentioned. 
  ud [word/term]|Look up a word or term on Urban Dictionary. 
  
  If you start a message by mentioning Charlie but no command is recognized, Charlie will reply as Cleverbot would!
