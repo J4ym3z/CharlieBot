@@ -110,23 +110,25 @@ client.on('message', message => {
                     }
                 });
               }).on('error', function(e){console.log("Got an error: ", e);});
-            }else if (arg === 'yt' || arg === 'youtube' && args[index + 1] && message.member.voiceChannel != undefined && musicPlaying === false) {
-              commandIssued = true;
-              musicPlaying = true;
-              var vid = message.content.split(' ')[2]
-              console.log('play ' + vid);
-              message.member.voiceChannel.join().then(connection => {
-                const stream = ytdl(vid, {filter : 'audioonly'});
-                const dispatcher = connection.playStream(stream);
-                dispatcher.on('end', reason => {
-                  console.log('song ended');
-                  if (musicQueue.length > 0) {
+            }else if (arg === 'yt' || arg === 'youtube' && args[index + 1] && message.member.voiceChannel != undefined) {
+              if (musicPlaying == false) {
+                commandIssued = true;
+                musicPlaying = true;
+                var vid = message.content.split(' ')[2]
+                console.log('play ' + vid);
+                message.member.voiceChannel.join().then(connection => {
+                  const stream = ytdl(vid, {filter : 'audioonly'});
+                  const dispatcher = connection.playStream(stream);
+                  dispatcher.on('end', reason => {
+                    console.log('song ended');
+                    if (musicQueue.length > 0) {
 
-                  }
-                  connection.disconnect();
-                  musicPlaying = false;
+                    }
+                    connection.disconnect();
+                    musicPlaying = false;
+                  });
                 });
-              });
+              }
             }
           }
         });
