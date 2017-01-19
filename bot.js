@@ -1,9 +1,13 @@
 const Discord = require('discord.js');
 const cleverbot = require('cleverbot.io');
-const http = require('http');
 
+const http = require('http');
 const chatbot = new cleverbot('ATbnnWU2C4okaHVT', 'GyGHH3l6gnL0jwlyiNf8rx1IncVMcdSO');
 const client = new Discord.Client();
+const ytdl = require('ytdl-core');
+
+var musicPlaying = false;
+var musicQueue = {};
 
 client.login('MjcwNjI1NjQ3NDY0OTM5NTIx.C16tsQ.Bz9vx9AkpV4G6iYvLK6FQfdENdI');
 
@@ -70,7 +74,7 @@ client.on('message', message => {
           message.channel.send('Invite me to your server! https://discordapp.com/oauth2/authorize?client_id=270625647464939521&scope=bot&permissions=8');
           commandIssued = true;
         }else if (msg === 'help') {
-          message.channel.send('__Charlie Help__ \n*All commands must begin with a mention of @Charlie* \n \n **help** - Full list of commands. \n **ping** - If Charlie is working, replies with \"pong!\" \n **marco** - polo! \n **time** - Shows your computer\'s time. \n **avatar** [user] - Displays the mentioned user\'s avatar, or your own if no user is mentioned. \n **owner** - Relays the owner of the server. \n **invite** - Want to add Charlie to your own server? \n **ud** [word/term] - Look up a word or term on Urban Dictionary. \n \n *If you start a message by mentioning Charlie but no command is recognized, Charlie will reply as Cleverbot would!*');
+          message.channel.send('__Charlie Help__ \n*All commands must begin with a mention of @Charlie* \n \n **help** - Full list of commands. \n **ping** - If Charlie is working, replies with \"pong!\" \n **marco** - polo! \n **time** - Shows your computer\'s time. \n **avatar** [user] - Displays the mentioned user\'s avatar, or your own if no user is mentioned. \n **owner** - Relays the owner of the server. \n **invite** - Want to add Charlie to your own server? \n **ud** [word/term] - Look up a word or term on Urban Dictionary. \n **yt/youtube** [url] - Plays the youtube audio in the channel you are in. \n \n *If you start a message by mentioning Charlie but no command is recognized, Charlie will reply as Cleverbot would!*');
           commandIssued = true;
         }
       }
@@ -106,6 +110,23 @@ client.on('message', message => {
                     }
                 });
               }).on('error', function(e){console.log("Got an error: ", e);});
+            }else if (arg === 'yt' || arg === 'youtube' && args[index + 1] && message.member.voiceChannel != undefined && musicPlaying === false) {
+              commandIssued = true;
+              musicPlaying = true;
+              var vid = message.content.split(' ')[2]
+              console.log('play ' + vid);
+              message.member.voiceChannel.join().then(connection => {
+                const stream = ytdl(vid, {filter : 'audioonly'});
+                const dispatcher = connection.playStream(stream);
+                dispatcher.on('end', reason => {
+                  console.log('song ended');
+                  if (musicQueue.length > 0) {
+
+                  }
+                  connection.disconnect();
+                  musicPlaying = false;
+                });
+              });
             }
           }
         });
@@ -135,7 +156,6 @@ client.on('message', message => {
     }else if (msg.includes('ayy lmao')) {
       message.reply('http://i.imgur.com/m7NaGVx.gif');
     }
-
   }
 
   else {
