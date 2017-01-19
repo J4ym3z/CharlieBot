@@ -5,6 +5,9 @@ const http = require('http');
 const chatbot = new cleverbot('ATbnnWU2C4okaHVT', 'GyGHH3l6gnL0jwlyiNf8rx1IncVMcdSO');
 const client = new Discord.Client();
 const ytdl = require('ytdl-core');
+const url = require('url');
+
+//console.log(url.parse('www.youtube.com'));
 
 var musicPlaying = false;
 var musicQueue = {};
@@ -120,27 +123,34 @@ client.on('message', message => {
                 });
               }).on('error', function(e){console.log("Got an error: ", e);});
             }else if (arg === 'yt' || arg === 'youtube' && args[index + 1] && message.member.voiceChannel != undefined) {
-              if (musicPlaying == false && message.embeds[0] != undefined) {
-                commandIssued = true;
-                musicPlaying = true;
-                var vid = message.content.split(' ')[2]
-                message.channel.send('**Now playing:** ' + message.embeds[0].title + " || added by *" + message.author.username + '.*');
-                message.delete()
-                  .then(msg => console.log(`Deleted message from ${msg.author}`))
-                  .catch(console.error);
-                message.member.voiceChannel.join().then(connection => {
-                  globalConnection = connection;
-                  const stream = ytdl(vid, {filter : 'audioonly'});
-                  const dispatcher = connection.playStream(stream);
-                  dispatcher.on('end', reason => {
-                    console.log('song ended');
-                    if (musicQueue.length > 0) {
+              var vid = message.content.split(' ')[2]
+              var parsedUrl = url.parse(vid)
+              console.log(parsedUrl);
+              if (parsedUrl.hostname === 'www.youtube.com' && parsedUrl.query != null) {
+                if (musicPlaying == false) {
+                  commandIssued = true;
+                  musicPlaying = true;
+                  //var title = 'https://www.googleapis.com/youtube/v3/videos?id=f_6T3FAqFjA&key=AIzaSyDQ7wVTqRVmcAhkJEnzG_IK23bZwijqeIs&fields=items(snippet(title))&part=snippet';
+                  //message.channel.send('id: ' + parsedUrl.query.slice(2));
+                  //message.channel.send('query: ' + parsedUrl.query);
+                  message.channel.send('**Now playing:** ' + '[title here]' + " || *added by: " + message.author.username + '.*');
+                  message.delete()
+                    .then(msg => console.log(`Deleted message from ${msg.author}`))
+                    .catch(console.error);
+                  message.member.voiceChannel.join().then(connection => {
+                    globalConnection = connection;
+                    const stream = ytdl(vid, {filter : 'audioonly'});
+                    const dispatcher = connection.playStream(stream);
+                    dispatcher.on('end', reason => {
+                      console.log('song ended');
+                      if (musicQueue.length > 0) {
 
-                    }
-                    connection.disconnect();
-                    musicPlaying = false;
+                      }
+                      connection.disconnect();
+                      musicPlaying = false;
+                    });
                   });
-                });
+                }
               }else {
                 if (args[index + 1] == 'stop') {
                   globalConnection.disconnect();
