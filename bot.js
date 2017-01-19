@@ -8,6 +8,7 @@ const ytdl = require('ytdl-core');
 
 var musicPlaying = false;
 var musicQueue = {};
+var globalConnection
 
 client.login('MjcwNjI1NjQ3NDY0OTM5NTIx.C16tsQ.Bz9vx9AkpV4G6iYvLK6FQfdENdI');
 
@@ -39,6 +40,10 @@ function timeNow(date) {
 
 client.on('ready', () => {
   console.log('I am ready!');
+});
+
+client.on('disconnect', () => {
+  console.log('disconnected!');
 });
 
 client.on('message', message => {
@@ -74,7 +79,11 @@ client.on('message', message => {
           message.channel.send('Invite me to your server! https://discordapp.com/oauth2/authorize?client_id=270625647464939521&scope=bot&permissions=8');
           commandIssued = true;
         }else if (msg === 'help') {
-          message.channel.send('__Charlie Help__ \n*All commands must begin with a mention of @Charlie* \n \n **help** - Full list of commands. \n **ping** - If Charlie is working, replies with \"pong!\" \n **marco** - polo! \n **time** - Shows your computer\'s time. \n **avatar** [user] - Displays the mentioned user\'s avatar, or your own if no user is mentioned. \n **owner** - Relays the owner of the server. \n **invite** - Want to add Charlie to your own server? \n **ud** [word/term] - Look up a word or term on Urban Dictionary. \n **yt/youtube** [url] - Plays the youtube audio in the channel you are in. \n \n *If you start a message by mentioning Charlie but no command is recognized, Charlie will reply as Cleverbot would!*');
+          message.channel.send('__Charlie Help__ \n*All commands must begin with a mention of @Charlie* \n \n **help** - Full list of commands. \n **ping** - If Charlie is working, replies with \"pong!\" \n **marco** - polo! \n **time** - Shows your computer\'s time. \n **avatar** [user] - Displays the mentioned user\'s avatar, or your own if no user is mentioned. \n **owner** - Relays the owner of the server. \n **invite** - Want to add Charlie to your own server? \n **ud** [word/term] - Look up a word or term on Urban Dictionary. \n **yt/youtube** [url] - Plays the youtube audio in the channel you are in. \n **stop** - Stops playing audio. \n \n *If you start a message by mentioning Charlie but no command is recognized, Charlie will reply as Cleverbot would!*');
+          commandIssued = true;
+        }else if (msg === 'stop' && globalConnection != undefined) {
+          globalConnection.disconnect();
+          message.channel.send('Stopped');
           commandIssued = true;
         }
       }
@@ -111,12 +120,16 @@ client.on('message', message => {
                 });
               }).on('error', function(e){console.log("Got an error: ", e);});
             }else if (arg === 'yt' || arg === 'youtube' && args[index + 1] && message.member.voiceChannel != undefined) {
-              if (musicPlaying == false) {
+              if (musicPlaying == false && message.embeds[0] != undefined) {
                 commandIssued = true;
                 musicPlaying = true;
                 var vid = message.content.split(' ')[2]
-                console.log('play ' + vid);
+                message.channel.send('**Now playing:** ' + message.embeds[0].title + " || added by *" + message.author.username + '.*');
+                message.delete()
+                  .then(msg => console.log(`Deleted message from ${msg.author}`))
+                  .catch(console.error);
                 message.member.voiceChannel.join().then(connection => {
+                  globalConnection = connection;
                   const stream = ytdl(vid, {filter : 'audioonly'});
                   const dispatcher = connection.playStream(stream);
                   dispatcher.on('end', reason => {
@@ -128,6 +141,21 @@ client.on('message', message => {
                     musicPlaying = false;
                   });
                 });
+              }else {
+                if (args[index + 1] == 'stop') {
+                  globalConnection.disconnect();
+                  message.channel.send('Stopped');
+                  commandIssued = true;
+                }else if (message.embeds[0] == undefined) {
+                  message.reply('Invalid URL');
+                  commandIssued = true;
+                }else {
+                  message.reply('Try again when the current audio finishes. The ability to queue audio is coming soon.');
+                  message.delete()
+                    .then(msg => console.log(`Deleted message from ${msg.author}`))
+                    .catch(console.error);
+                  commandIssued = true;
+                }
               }
             }
           }
@@ -151,8 +179,6 @@ client.on('message', message => {
       message.reply('i ate those food');
     }else if (msg.includes('fridge')) {
       message.reply('http://prnt.sc/dwk6q3');
-    }else if (msg === 'fuck off') {
-      message.reply('https://i.imgur.com/XkGB8qV.gif');
     }else if (msg.includes('green')) {
       message.reply('green is not a creative color');
     }else if (msg.includes('ayy lmao')) {
