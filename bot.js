@@ -1,30 +1,39 @@
 const Discord = require('discord.js');
 const cleverbot = require('cleverbot.io');
-
 const http = require('http');
 const https = require('https');
-const chatbot = new cleverbot('ATbnnWU2C4okaHVT', 'GyGHH3l6gnL0jwlyiNf8rx1IncVMcdSO');
 const client = new Discord.Client();
 const ytdl = require('ytdl-core');
 const url = require('url');
+const fs = require('fs');
+
+var askCleverBot
+var APIsReady = false;
+
+var keys = fs.readFile('../keys.json', 'utf8', (err, data) => {
+  if (err) throw err;
+  keys = JSON.parse(data);
+  console.log('done');
+  client.login(keys.discordToken);
+  const chatbot = new cleverbot(keys.cleverbotUser, keys.cleverbotKey);
+  chatbot.setNick('discordCharlieBot');
+  chatbot.create(function (err, session) {});
+  askCleverBot = function(query, msg) {
+    chatbot.ask(query, function (err, response) {
+      if (response != 'Error, the reference "" does not exist') {
+        msg.reply(response);
+      }else {
+      }
+    });
+  }
+  APIsReady = true;
+  return keys;
+});
 
 var musicPlaying = false;
 var musicQueue = [];
 var globalConnection
 var globalDispatcher
-
-client.login('MjcwNjI1NjQ3NDY0OTM5NTIx.C16tsQ.Bz9vx9AkpV4G6iYvLK6FQfdENdI');
-chatbot.setNick('discordCharlieBot');
-chatbot.create(function (err, session) {});
-
-function askCleverBot(query, msg) {
-  chatbot.ask(query, function (err, response) {
-    if (response != 'Error, the reference "" does not exist') {
-      msg.reply(response);
-    }else {
-    }
-  });
-}
 
 function timeNow(date) {
   var d = date,
@@ -79,7 +88,7 @@ function playMusic(info){
   var vid = info[0];
   var parsedUrl = info[1];
   var message = info[2];
-  var ytUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + parsedUrl.query.slice(2) + "&key=AIzaSyDQ7wVTqRVmcAhkJEnzG_IK23bZwijqeIs&fields=items(snippet(title))&part=snippet"
+  var ytUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + parsedUrl.query.slice(2) + "&key=" + keys.youtubeKey + "&fields=items(snippet(title))&part=snippet"
 
   httpsReq(ytUrl, function(response){
     var title = response.items[0].snippet.title
@@ -145,7 +154,7 @@ client.on('message', message => {
 
       else if (args.length >= 2) {
         args.forEach(function(arg, index){ //loop for commands with atleast one argument
-          if (commandIssued === false) {
+          if (commandIssued === false && APIsReady) {
             if (arg === 'avatar') {
               if (message.mentions.users.firstKey() != undefined && args[index + 1].slice(2, 20) === message.mentions.users.first().id) {
                 message.channel.send(message.mentions.users.first().avatarURL);
@@ -169,7 +178,7 @@ client.on('message', message => {
             }else if (arg === 'yt' || arg === 'youtube' && args[index + 1] && message.member.voiceChannel != undefined) {
               var vid = message.content.split(' ')[1]
               var parsedUrl = url.parse(vid)
-              console.log(parsedUrl);
+              //console.log(parsedUrl);
               if (parsedUrl.hostname === 'www.youtube.com' && parsedUrl.query != null) {
                 if (musicPlaying == false) {
                   commandIssued = true;
@@ -180,7 +189,7 @@ client.on('message', message => {
                   playMusic([vid, parsedUrl, message]);
                 }else {
                   musicQueue.push([vid, parsedUrl, message]);
-                  var ytUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + parsedUrl.query.slice(2) + "&key=AIzaSyDQ7wVTqRVmcAhkJEnzG_IK23bZwijqeIs&fields=items(snippet(title))&part=snippet"
+                  var ytUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + parsedUrl.query.slice(2) + "&key=" + keys.youtubeKey + "&fields=items(snippet(title))&part=snippet"
 
                   httpsReq(ytUrl, function(response){
                     var title = response.items[0].snippet.title
