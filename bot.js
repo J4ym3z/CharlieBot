@@ -2,29 +2,26 @@ const Discord = require('discord.js');
 const cleverbot = require('cleverbot.io');
 
 const http = require('http');
+const https = require('https');
 const chatbot = new cleverbot('ATbnnWU2C4okaHVT', 'GyGHH3l6gnL0jwlyiNf8rx1IncVMcdSO');
 const client = new Discord.Client();
 const ytdl = require('ytdl-core');
 const url = require('url');
 
-//console.log(url.parse('www.youtube.com'));
-
 var musicPlaying = false;
-var musicQueue = {};
+var musicQueue = [];
 var globalConnection
+var globalDispatcher
 
 client.login('MjcwNjI1NjQ3NDY0OTM5NTIx.C16tsQ.Bz9vx9AkpV4G6iYvLK6FQfdENdI');
-
 chatbot.setNick('discordCharlieBot');
 chatbot.create(function (err, session) {});
 
 function askCleverBot(query, msg) {
   chatbot.ask(query, function (err, response) {
-    //console.log(response);
     if (response != 'Error, the reference "" does not exist') {
       msg.reply(response);
     }else {
-      //console.log('cleverbot.io returned an error');
     }
   });
 }
@@ -43,22 +40,74 @@ function timeNow(date) {
 
 client.on('ready', () => {
   console.log('I am ready!');
+  client.user.setGame('!help');
 });
 
 client.on('disconnect', () => {
   console.log('disconnected!');
 });
 
+function httpReq(APIUrl, action){
+  http.get(APIUrl, function(res){
+    var body = '';
+    res.on('data', function(chunk){
+      body += chunk;
+    });
+    res.on('end', function(){
+      action(JSON.parse(body));
+    });
+  }).on('error', function(e){
+    console.log("Got an error: ", e);
+  });
+}
+
+function httpsReq(APIUrl, action){
+  https.get(APIUrl, function(res){
+    var body = '';
+    res.on('data', function(chunk){
+      body += chunk;
+    });
+    res.on('end', function(){
+      action(JSON.parse(body));
+    });
+  }).on('error', function(e){
+    console.log("Got an error: ", e);
+  });
+}
+
+function playMusic(info){
+  var vid = info[0];
+  var parsedUrl = info[1];
+  var message = info[2];
+  var ytUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + parsedUrl.query.slice(2) + "&key=AIzaSyDQ7wVTqRVmcAhkJEnzG_IK23bZwijqeIs&fields=items(snippet(title))&part=snippet"
+
+  httpsReq(ytUrl, function(response){
+    var title = response.items[0].snippet.title
+    message.channel.send('**Now playing:** ' + title + " || *added by: " + message.author.username + '.*');
+  });
+  message.member.voiceChannel.join().then(connection => {
+    globalConnection = connection;
+    const stream = ytdl(vid, {filter : 'audioonly'});
+    const dispatcher = connection.playStream(stream);
+    globalDispatcher = dispatcher;
+    dispatcher.on('end', reason => {
+      console.log('song ended');
+      if (musicQueue.length > 0) {
+        playMusic(musicQueue.shift());
+      }else {
+        connection.disconnect();
+        musicPlaying = false;
+      }
+    });
+  });
+}
+
 client.on('message', message => {
   if (message.author.bot !== true) {
-
-    if (message.toString().slice(0,22).trim() == '<@270625647464939521>') { //This means the message may be a command
-
-      var msg = message.toString().slice(22).toLowerCase();
+    if (message.toString().slice(0,1).trim() == '!') { //This means the message may be a command
+      var msg = message.toString().slice(1).toLowerCase();
       var args = msg.split(' ');
-
       var commandIssued = false;
-
       if (args.length === 1) { //single word command
         if (msg === 'ping') {
           message.channel.send('pong!');
@@ -82,11 +131,14 @@ client.on('message', message => {
           message.channel.send('Invite me to your server! https://discordapp.com/oauth2/authorize?client_id=270625647464939521&scope=bot&permissions=8');
           commandIssued = true;
         }else if (msg === 'help') {
-          message.channel.send('__Charlie Help__ \n*All commands must begin with a mention of @Charlie* \n \n **help** - Full list of commands. \n **ping** - If Charlie is working, replies with \"pong!\" \n **marco** - polo! \n **time** - Shows your computer\'s time. \n **avatar** [user] - Displays the mentioned user\'s avatar, or your own if no user is mentioned. \n **owner** - Relays the owner of the server. \n **invite** - Want to add Charlie to your own server? \n **ud** [word/term] - Look up a word or term on Urban Dictionary. \n **yt/youtube** [url] - Plays the youtube audio in the channel you are in. \n **stop** - Stops playing audio. \n \n *If you start a message by mentioning Charlie but no command is recognized, Charlie will reply as Cleverbot would!*');
+          message.channel.send('__Charlie Help__ \n*All commands must begin with a "!"* \n \n **!help** - Full list of commands. \n **!ping** - If Charlie is working, replies with \"pong!\" \n **!marco** - polo! \n **!avatar** [user] - Displays the mentioned user\'s avatar, or your own if no user is mentioned. \n **!owner** - Relays the owner of the server. \n **!invite** - Want to add Charlie to your own server? \n **!ud** [word/term] - Look up a word or term on Urban Dictionary. \n **!yt/youtube** [url] - Plays the youtube audio in the channel you are in. If something is already playing, your audio will be added to the queue. \n **!stop** - Stops playing audio and clears the queue. \n **!skip** - Skips the current audio and moves to the next item in the queue. \n \n *Any other message started with "!" will chat with Cleverbot!*');
           commandIssued = true;
         }else if (msg === 'stop' && globalConnection != undefined) {
           globalConnection.disconnect();
-          message.channel.send('Stopped');
+          message.channel.send('Stopped. Items that were still in queue: ' + musicQueue.length);
+          commandIssued = true;
+        }else if (msg === 'skip' && globalConnection != undefined && musicPlaying) {
+          globalDispatcher.end();
           commandIssued = true;
         }
       }
@@ -95,75 +147,57 @@ client.on('message', message => {
         args.forEach(function(arg, index){ //loop for commands with atleast one argument
           if (commandIssued === false) {
             if (arg === 'avatar') {
-              if (args[index + 1].slice(2, 20) === message.mentions.users.first().id) {
+              if (message.mentions.users.firstKey() != undefined && args[index + 1].slice(2, 20) === message.mentions.users.first().id) {
                 message.channel.send(message.mentions.users.first().avatarURL);
                 commandIssued = true;
               }
             }else if (arg === 'ud' && args[index + 1]) {
-
               var searchTerm = args.slice(1).join('+');
-
               var udUrl = 'http://api.urbandictionary.com/v0/define?term=' + searchTerm;
-
               commandIssued = true;
-              //console.log('commandIssued is now true');
 
-              http.get(udUrl, function(res){
-                var body = '';
-                res.on('data', function(chunk){
-                    body += chunk;
-                });
-                res.on('end', function(){
-                    var udResponse = JSON.parse(body);
-                    if (udResponse.result_type != 'no_results') {
-                      message.channel.send('__Urban Dictionary__\n**' + udResponse.list[0].word + ':**' + '```\n' + udResponse.list[0].definition + '\n```\n \n **example:**\n```' + udResponse.list[0].example + '\n```');
-                    }else {
-                      message.channel.send('No results for word or term.');
-                    }
-                });
-              }).on('error', function(e){console.log("Got an error: ", e);});
+              function sendUdMsg(udResponse){
+                if (udResponse.result_type != 'no_results') {
+                  message.channel.send('__Urban Dictionary__\n**' + udResponse.list[0].word + ':**' + '```\n' + udResponse.list[0].definition + '\n```\n \n **example:**\n```' + udResponse.list[0].example + '\n```');
+                }else {
+                  message.channel.send('No results for word or term.');
+                }
+              }
+
+              httpReq(udUrl, sendUdMsg);
+
             }else if (arg === 'yt' || arg === 'youtube' && args[index + 1] && message.member.voiceChannel != undefined) {
-              var vid = message.content.split(' ')[2]
+              var vid = message.content.split(' ')[1]
               var parsedUrl = url.parse(vid)
               console.log(parsedUrl);
               if (parsedUrl.hostname === 'www.youtube.com' && parsedUrl.query != null) {
                 if (musicPlaying == false) {
                   commandIssued = true;
                   musicPlaying = true;
-                  //var title = 'https://www.googleapis.com/youtube/v3/videos?id=f_6T3FAqFjA&key=AIzaSyDQ7wVTqRVmcAhkJEnzG_IK23bZwijqeIs&fields=items(snippet(title))&part=snippet';
-                  //message.channel.send('id: ' + parsedUrl.query.slice(2));
-                  //message.channel.send('query: ' + parsedUrl.query);
-                  message.channel.send('**Now playing:** ' + '[title here]' + " || *added by: " + message.author.username + '.*');
                   message.delete()
                     .then(msg => console.log(`Deleted message from ${msg.author}`))
                     .catch(console.error);
-                  message.member.voiceChannel.join().then(connection => {
-                    globalConnection = connection;
-                    const stream = ytdl(vid, {filter : 'audioonly'});
-                    const dispatcher = connection.playStream(stream);
-                    dispatcher.on('end', reason => {
-                      console.log('song ended');
-                      if (musicQueue.length > 0) {
+                  playMusic([vid, parsedUrl, message]);
+                }else {
+                  musicQueue.push([vid, parsedUrl, message]);
+                  var ytUrl = "https://www.googleapis.com/youtube/v3/videos?id=" + parsedUrl.query.slice(2) + "&key=AIzaSyDQ7wVTqRVmcAhkJEnzG_IK23bZwijqeIs&fields=items(snippet(title))&part=snippet"
 
-                      }
-                      connection.disconnect();
-                      musicPlaying = false;
-                    });
+                  httpsReq(ytUrl, function(response){
+                    var title = response.items[0].snippet.title
+                    message.channel.send(title + ' has been added to queue position ' + musicQueue.length);
                   });
+                  message.delete()
+                    .then(msg => console.log(`Deleted message from ${msg.author}`))
+                    .catch(console.error);
+                  commandIssued = true;
                 }
               }else {
                 if (args[index + 1] == 'stop') {
                   globalConnection.disconnect();
-                  message.channel.send('Stopped');
+                  message.channel.send('Stopped. Items that were still in queue: ' + musicQueue.length);
                   commandIssued = true;
                 }else if (message.embeds[0] == undefined) {
                   message.reply('Invalid URL');
-                  commandIssued = true;
-                }else {
-                  message.reply('Try again when the current audio finishes. The ability to queue audio is coming soon.');
-                  message.delete()
-                    .then(msg => console.log(`Deleted message from ${msg.author}`))
-                    .catch(console.error);
                   commandIssued = true;
                 }
               }
@@ -173,17 +207,13 @@ client.on('message', message => {
       }
 
       if (commandIssued === false) {
-        //console.log('detecting commandIssued as false');
         askCleverBot(message.toString().slice(22), message);
       }
-
     }
 
     var msg = message.content.toLowerCase();
 
-    if (msg.includes('lie') || msg.includes('liar')){
-      //message.reply('its true it\'s from jacksfilms');
-    }else if (msg.includes('shut up')) {
+    if (msg.includes('shut up')) {
       message.reply('bad day?');
     }else if (msg.includes('lasaga')) {
       message.reply('i ate those food');
@@ -195,9 +225,4 @@ client.on('message', message => {
       message.reply('http://i.imgur.com/m7NaGVx.gif');
     }
   }
-
-  else {
-    //console.log(message.toString().slice(0,22));
-  }
-
 });
