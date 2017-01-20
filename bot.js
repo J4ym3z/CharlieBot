@@ -137,7 +137,7 @@ client.on('message', message => {
             commandIssued = true;
           }
         }else if (msg === 'invite') {
-          message.channel.send('Invite me to your server! https://discordapp.com/oauth2/authorize?client_id=270625647464939521&scope=bot');
+          message.channel.send('Invite me to your server! https://discordapp.com/oauth2/authorize?client_id=270625647464939521&scope=bot&permissions=3173377');
           commandIssued = true;
         }else if (msg === 'help') {
           message.channel.send('__Charlie Help__ \n*All commands must begin with a "!"* \n \n **!help** - Full list of commands. \n **!ping** - If Charlie is working, replies with \"pong!\" \n **!marco** - polo! \n **!avatar** [user] - Displays the mentioned user\'s avatar, or your own if no user is mentioned. \n **!owner** - Relays the owner of the server. \n **!invite** - Want to add Charlie to your own server? \n **!ud** [word/term] - Look up a word or term on Urban Dictionary. \n **!yt/youtube** [url] - Plays the youtube audio in the channel you are in. If something is already playing, your audio will be added to the queue. \n **!stop** - Stops playing audio and clears the queue. \n **!skip** - Skips the current audio and moves to the next item in the queue. \n \n *Any other message started with "!" will chat with Cleverbot!*');
