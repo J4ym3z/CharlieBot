@@ -26,7 +26,7 @@ All commands must begin with a "!"
 #### Example command
  
  ```
- @Charlie yt https://www.youtube.com/watch?v=_esYONwdKuw
+ !yt https://www.youtube.com/watch?v=_esYONwdKuw
  ```
  
  If you start a message by mentioning Charlie but no command is recognized, Charlie will reply as Cleverbot would!
