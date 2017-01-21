@@ -1,5 +1,5 @@
 # CharlieBot
-A basic Discord bot.
+A basic Discord bot. Music, Cleverbot, Urban Dictionary.
 
 ## How to use
  Simply invite Charlie to any server you're an andministrator on by going to this URL:
