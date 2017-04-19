@@ -24,3 +24,5 @@ All commands must begin with a "!"
  ```
  !yt https://www.youtube.com/watch?v=_esYONwdKuw
  ```
+
+(you'll have to host the bot yourself to use it)
